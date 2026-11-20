@@ -84,6 +84,8 @@ export default {
       assert.match(text(), /filePath/);
       assert.match(text(), /\.env/);
       assert.match(text(), /Description/);
+      assert.match(text(), /(?:^|\n)\S+ {2}(?:Allow|Ask|Deny)(?:\n|$)/);
+      assert.doesNotMatch(text(), /primary:|subagent:|as a subagent:/);
       stages.push("filter and read detail rendered");
       const scrollBoxes: ScrollBoxRenderable[] = [];
       const collectScroll = (node: Renderable) => {

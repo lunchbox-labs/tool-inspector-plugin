@@ -34,12 +34,14 @@ The input shows each field's type, whether it's required, its allowed values, de
 
 ## Agent access
 
-The tool list isn't filtered by agent. Instead, a tool's detail lists each agent and whether it's allowed to use the tool, asks first, is denied, or isn't offered the tool at all, following each agent's merged `permission` rules and the rules of the current top-level session. Input patterns with different access, such as `read` asking first for `*.env` files, are listed under the agent.
+The tool list isn't filtered by agent. Instead, a tool's detail lists each agent with **Allow**, **Ask** or **Deny**, following each agent's merged `permission` rules and the rules of the current top-level session. **Deny** also covers tools the host doesn't offer that agent. Unreadable permissions show **Unknown**.
 
-Agents with mode `all` also show their access when they run as a subagent, where that differs, since the host always denies subagents any `experimental.primary_tools`, and denies `todowrite` and `task` unless the agent's own rules name them.
+Input patterns with different access are indented under the agent as `pattern: Allow`, `pattern: Ask` or `pattern: Deny`, for example `*.env: Ask` or `git log*: Allow`. Patterns match the call's input, such as a command or path; a later line wins when patterns overlap.
+
+Agent modes aren't shown. Agents with mode `all` show their primary access; separate subagent access isn't listed. The host can restrict tools further when these agents run as subagents: it denies any `experimental.primary_tools`, and denies `todowrite` and `task` unless the agent's own rules name them.
 
 The host's own hidden agents, such as `compaction` and `title`, are left out. If the host's agents can't be read, details open without the agents section and a toast says why.
 
 ### In Kilo
 
-Kilo applies more checks at call time than its configured rules show, so the Kilo package words access as configured: "allowed by configured rules", "asks first by configured rules" and "denied by configured rules". Every tool's agents section starts with a note that Kilo can still ask or deny at call time, and that saved approvals, hard limits, skill commands and sandbox escalation aren't resolved here. Tools checked as `read` or `edit` add a note that Kilo checks protected config paths, such as sensitive `.env` files, separately, and `agent_manager` adds a note that its prompt, stop, move and answer actions need exact action rules. Headless subagent restrictions aren't shown either.
+Kilo uses the same compact labels for configured permissions. Every tool's agents section starts with a note that Kilo can still ask or deny at call time, and that saved approvals, hard limits, skill commands and sandbox escalation aren't resolved here. Tools checked as `read` or `edit` add a note that Kilo checks protected config paths, such as sensitive `.env` files, separately, and `agent_manager` adds a note that its prompt, stop, move and answer actions need exact action rules. Headless subagent restrictions aren't shown either.

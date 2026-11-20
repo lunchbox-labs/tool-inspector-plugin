@@ -1,6 +1,5 @@
 import type {
   AccessDecision,
-  AgentMode,
   AgentToolAccess,
   ToolAgentAccess,
 } from "./agents.ts";
@@ -9,23 +8,8 @@ import type { TextLine, TextSegment } from "./schema-text.ts";
 
 type ActionLabels = Host["actionLabels"];
 
-const modeLabels: Record<AgentMode, string | undefined> = {
-  primary: "primary",
-  subagent: "subagent",
-  all: "primary or subagent",
-  unknown: undefined,
-};
-
 function muted(text: string): TextSegment {
   return { text, tone: "muted" };
-}
-
-function plain(text: string): TextSegment {
-  return { text, tone: "plain" };
-}
-
-function indent(depth: number): string {
-  return "  ".repeat(depth);
 }
 
 function decisionSummary(
@@ -33,25 +17,24 @@ function decisionSummary(
   actionLabels: ActionLabels,
 ): string {
   if (decision.access === "unknown") {
-    return "unknown, permissions couldn't be read";
+    return "Unknown";
   }
   if (decision.offeredToModel === false) {
-    return "not offered to the model";
+    return actionLabels.deny;
   }
   return actionLabels[decision.access];
 }
 
 function exceptionLines(
   decision: AccessDecision,
-  depth: number,
   actionLabels: ActionLabels,
 ): TextLine[] {
   if (decision.offeredToModel === false) {
     return [];
   }
   return decision.exceptions.map((exception) => [
-    plain(`${indent(depth)}${actionLabels[exception.access]} for `),
-    { text: exception.pattern, tone: "name" },
+    { text: `  ${exception.pattern}`, tone: "name" },
+    muted(`: ${actionLabels[exception.access]}`),
   ]);
 }
 
@@ -59,30 +42,13 @@ function agentLines(
   agent: AgentToolAccess,
   actionLabels: ActionLabels,
 ): TextLine[] {
-  const notes = [
-    modeLabels[agent.mode],
-    ...(agent.hidden ? ["hidden"] : []),
-  ].filter((note) => note !== undefined);
-  const lines: TextLine[] = [
+  return [
     [
       { text: agent.agent, tone: "name" },
-      muted(
-        `  ${notes.length === 0 ? "" : `${notes.join(", ")}: `}${decisionSummary(agent, actionLabels)}`,
-      ),
+      muted(`  ${decisionSummary(agent, actionLabels)}`),
     ],
-    ...exceptionLines(agent, 1, actionLabels),
+    ...exceptionLines(agent, actionLabels),
   ];
-  if (agent.whenSubagent !== undefined) {
-    lines.push(
-      [
-        plain(
-          `${indent(1)}as a subagent: ${decisionSummary(agent.whenSubagent, actionLabels)}`,
-        ),
-      ],
-      ...exceptionLines(agent.whenSubagent, 2, actionLabels),
-    );
-  }
-  return lines;
 }
 
 /** The host's own hidden agents, such as `compaction` and `title`, never take tool calls. */
@@ -127,24 +93,9 @@ export function agentAccessLines(
     access.permission === access.tool
       ? []
       : [[muted(`Checked as the ${access.permission} permission.`)]];
-  const patternNote: TextLine[] = agents.some(
-    (agent) =>
-      exceptionLines(agent, 1, actionLabels).length > 0 ||
-      (agent.whenSubagent !== undefined &&
-        exceptionLines(agent.whenSubagent, 2, actionLabels).length > 0),
-  )
-    ? [
-        [
-          muted(
-            "Patterns match the call's input, such as a command or path; a later line wins.",
-          ),
-        ],
-      ]
-    : [];
   return [
     ...permissionNote,
     ...accessNoteLines(host.accessNotes, access),
     ...agents.flatMap((agent) => agentLines(agent, actionLabels)),
-    ...patternNote,
   ];
 }
