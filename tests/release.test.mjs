@@ -745,7 +745,7 @@ test(
     assert.equal(created.code, 0, created.stderr);
     assert.ok(
       created.calls.includes(
-        `gh release create v1.2.3 ${attachedFiles} --target ${commit} --generate-notes --title v1.2.3 --prerelease=false`,
+        `gh release create v1.2.3 ${attachedFiles} --target ${commit} --generate-notes --title v1.2.3 --prerelease=false --latest=true`,
       ),
       created.calls.join("\n"),
     );
@@ -754,7 +754,7 @@ test(
     assert.equal(pre.code, 0, pre.stderr);
     assert.ok(
       pre.calls.includes(
-        `gh release create v1.2.3 ${attachedFiles} --target ${commit} --generate-notes --title v1.2.3 --prerelease=true`,
+        `gh release create v1.2.3 ${attachedFiles} --target ${commit} --generate-notes --title v1.2.3 --prerelease=true --latest=false`,
       ),
       pre.calls.join("\n"),
     );
@@ -784,7 +784,7 @@ test(
       `gh release upload v1.2.3 ${attachedFiles} --clobber`,
     );
     const edit = draft.calls.indexOf(
-      `gh release edit v1.2.3 --draft=false --target ${commit} --title v1.2.3 --prerelease=false`,
+      `gh release edit v1.2.3 --draft=false --target ${commit} --title v1.2.3 --prerelease=false --latest=true`,
     );
     assert.ok(upload >= 0 && edit > upload, draft.calls.join("\n"));
     assert.equal(draft.output, `attached=true\nurl=${releasePage}\n`);
@@ -875,7 +875,7 @@ test(
     assert.equal(draft.code, 0, draft.stderr);
     assert.ok(
       draft.calls.includes(
-        `gh release edit v1.2.3 --draft=false --target ${commit} --title v1.2.3 --prerelease=true`,
+        `gh release edit v1.2.3 --draft=false --target ${commit} --title v1.2.3 --prerelease=true --latest=false`,
       ),
       draft.calls.join("\n"),
     );
