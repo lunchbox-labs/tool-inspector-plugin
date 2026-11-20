@@ -5,15 +5,15 @@ const protectedConfigPaths = [
 ];
 
 /**
- * Kilo applies call-time checks beyond the configured rules, so its labels and notes say that
- * the detail shows configuration rather than a final authorization decision.
+ * Kilo applies call-time checks beyond the configured rules, so its notes distinguish the
+ * configured permissions from a final authorization decision.
  */
 export const kiloHost: Host = {
   name: "Kilo",
   actionLabels: {
-    allow: "allowed by configured rules",
-    ask: "asks first by configured rules",
-    deny: "denied by configured rules",
+    allow: "Allow",
+    ask: "Ask",
+    deny: "Deny",
   },
   accessNotes: {
     always: [

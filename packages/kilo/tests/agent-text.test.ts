@@ -16,7 +16,7 @@ function render(
   return linesText(agentAccessLines(access, kiloHost));
 }
 
-test("tools sharing a permission name it, and subagent access is shown where it differs", () => {
+test("tools sharing a permission name it, with compact labels and no mode annotations", () => {
   assert.equal(
     render(
       "write",
@@ -37,16 +37,14 @@ test("tools sharing a permission name it, and subagent access is shown where it 
       "Checked as the edit permission.",
       "Configured rules only. Kilo can still ask or deny at call time; saved approvals, hard limits, skill commands and sandbox escalation are not resolved here.",
       "Kilo checks protected config paths separately; broad read grants do not automatically authorize sensitive .env files.",
-      "build  primary or subagent: allowed by configured rules",
-      "  denied by configured rules for *.lock",
-      "  as a subagent: not offered to the model",
-      "docs  subagent: not offered to the model",
-      "Patterns match the call's input, such as a command or path; a later line wins.",
+      "build  Allow",
+      "  *.lock: Deny",
+      "docs  Deny",
     ].join("\n"),
   );
 });
 
-test("hidden custom agents are labelled, Kilo's hidden agents are left out, and unreadable rules say so", () => {
+test("custom agents show only permissions, native hidden agents are left out, and unreadable rules are unknown", () => {
   assert.equal(
     render("read", [
       { name: "title", mode: "primary", native: true, hidden: true },
@@ -61,8 +59,8 @@ test("hidden custom agents are labelled, Kilo's hidden agents are left out, and 
     [
       "Configured rules only. Kilo can still ask or deny at call time; saved approvals, hard limits, skill commands and sandbox escalation are not resolved here.",
       "Kilo checks protected config paths separately; broad read grants do not automatically authorize sensitive .env files.",
-      "broken  primary: unknown, permissions couldn't be read",
-      "reviewer  subagent, hidden: allowed by configured rules",
+      "broken  Unknown",
+      "reviewer  Allow",
     ].join("\n"),
   );
 });
@@ -80,7 +78,7 @@ test("agent access distinguishes configuration from Kilo runtime authorization",
   const text = render("bash", [
     { name: "build", mode: "primary", permission: [allowAll] },
   ]);
-  assert.match(text, /allowed by configured rules/);
+  assert.match(text, /build {2}Allow/);
   assert.match(text, /Kilo can still ask or deny at call time/);
   assert.match(text, /saved approvals/);
 });

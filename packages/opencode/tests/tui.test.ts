@@ -200,13 +200,9 @@ test("choosing a tool shows its description and input, and Escape returns to it 
       "Input",
       "filePath  string, required\n  The absolute path to read\nlimit  integer, ≥ 0",
       "Agents",
-      [
-        "build  primary: allowed",
-        "  asks first for *.env",
-        "plan  primary: allowed",
-        "explore  subagent: allowed",
-        "Patterns match the call's input, such as a command or path; a later line wins.",
-      ].join("\n"),
+      ["build  Allow", "  *.env: Ask", "plan  Allow", "explore  Allow"].join(
+        "\n",
+      ),
       "Description",
       "Read a file from the local filesystem.\n\nUsage:\n- Use absolute paths.",
       "↑/↓ scroll · pgup/pgdn page · home/end · esc back",
@@ -491,7 +487,7 @@ test("a tool's detail lists each agent's access, with the patterns that differ",
   const text = await openDetail(host, "bash");
   assert.match(
     text,
-    /Agents\nbuild {2}primary: allowed\nplan {2}primary: asks first\n {2}allowed for git log\*\nexplore {2}subagent: not offered to the model\n/,
+    /Agents\nbuild {2}Allow\nplan {2}Ask\n {2}git log\*: Allow\nexplore {2}Deny\n/,
   );
   assert.doesNotMatch(text, /compaction/);
   assert.deepEqual(host.toasts, []);
@@ -510,8 +506,8 @@ test("the session's own permission rules apply, from its top-level session", asy
     },
   });
   const text = await openDetail(host, "bash");
-  assert.match(text, /build {2}primary: not offered to the model/);
-  assert.match(text, /plan {2}primary: not offered to the model/);
+  assert.match(text, /build {2}Deny/);
+  assert.match(text, /plan {2}Deny/);
 });
 
 test("when agents can't be read the detail opens without them and one toast says why", async () => {
@@ -553,10 +549,10 @@ test("agents are still listed when the tool list has names only", async () => {
     { config: { model: "openai/gpt-5" } },
   );
   const text = await openDetail(host, "websearch");
-  assert.match(text, /Agents\nbuild {2}primary: allowed/);
+  assert.match(text, /Agents\nbuild {2}Allow/);
 });
 
-test("subagents and agents of mode all are denied experimental.primary_tools", async () => {
+test("agent summaries omit secondary mode access while preserving resolved restrictions", async () => {
   const sdk = client();
   sdk.app.agents = async () => ({
     data: [
@@ -571,10 +567,8 @@ test("subagents and agents of mode all are denied experimental.primary_tools", a
     },
   });
   const text = await openDetail(host, "bash");
-  assert.match(
-    text,
-    /review {2}primary or subagent: allowed\n {2}as a subagent: not offered to the model\ndocs {2}subagent: not offered to the model/,
-  );
+  assert.match(text, /review {2}Allow\ndocs {2}Deny/);
+  assert.doesNotMatch(text, /primary|subagent/);
 });
 
 test("an agents response that isn't a list or is an error leaves agents out with a toast", async () => {
@@ -610,6 +604,6 @@ test("a child session whose parent isn't loaded uses its own copied rules, and p
       sessions,
     });
     const text = await openDetail(host, "bash");
-    assert.match(text, /build {2}primary: not offered to the model/);
+    assert.match(text, /build {2}Deny/);
   }
 });

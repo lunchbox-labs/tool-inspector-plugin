@@ -16,7 +16,7 @@ function render(
   return linesText(agentAccessLines(access, opencodeHost));
 }
 
-test("tools sharing a permission name it, and subagent access is shown where it differs", () => {
+test("tools sharing a permission name it, with compact labels and no mode annotations", () => {
   assert.equal(
     render(
       "write",
@@ -35,16 +35,14 @@ test("tools sharing a permission name it, and subagent access is shown where it 
     ),
     [
       "Checked as the edit permission.",
-      "build  primary or subagent: allowed",
-      "  denied for *.lock",
-      "  as a subagent: not offered to the model",
-      "docs  subagent: not offered to the model",
-      "Patterns match the call's input, such as a command or path; a later line wins.",
+      "build  Allow",
+      "  *.lock: Deny",
+      "docs  Deny",
     ].join("\n"),
   );
 });
 
-test("hidden custom agents are labelled, OpenCode's hidden agents are left out, and unreadable rules say so", () => {
+test("custom agents show only permissions, native hidden agents are left out, and unreadable rules are unknown", () => {
   assert.equal(
     render("read", [
       { name: "title", mode: "primary", native: true, hidden: true },
@@ -56,10 +54,7 @@ test("hidden custom agents are labelled, OpenCode's hidden agents are left out, 
       },
       { name: "broken", mode: "primary", permission: "nope" },
     ]),
-    [
-      "broken  primary: unknown, permissions couldn't be read",
-      "reviewer  subagent, hidden: allowed",
-    ].join("\n"),
+    ["broken  Unknown", "reviewer  Allow"].join("\n"),
   );
 });
 
@@ -69,5 +64,40 @@ test("a tool no listed agent can run says so instead of rendering nothing", () =
       { name: "title", mode: "primary", native: true, hidden: true },
     ]),
     "OpenCode reported no agents that use tools.",
+  );
+});
+
+test("path rules use compact labels and preserve precedence when patterns overlap", () => {
+  assert.equal(
+    render("read", [
+      {
+        name: "build",
+        mode: "primary",
+        permission: [
+          allowAll,
+          { permission: "read", pattern: ".env", action: "deny" },
+          { permission: "read", pattern: "secrets/**", action: "ask" },
+          { permission: "read", pattern: "secrets/public/*", action: "allow" },
+        ],
+      },
+      {
+        name: "plan",
+        mode: "primary",
+        permission: [{ permission: "read", pattern: "*", action: "ask" }],
+      },
+      {
+        name: "explore",
+        mode: "subagent",
+        permission: [{ permission: "read", pattern: "*", action: "deny" }],
+      },
+    ]),
+    [
+      "build  Allow",
+      "  .env: Deny",
+      "  secrets/**: Ask",
+      "  secrets/public/*: Allow",
+      "plan  Ask",
+      "explore  Deny",
+    ].join("\n"),
   );
 });
