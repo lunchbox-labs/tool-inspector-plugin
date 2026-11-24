@@ -14,7 +14,7 @@ const rule = (
   pattern = "*",
 ): PermissionRuleInput => ({ permission, pattern, action });
 
-// A subset of OpenCode 1.19.5's starting rules for every agent.
+// A subset of OpenCode 1.19.6's starting rules for every agent.
 const defaults = [
   rule("*", "allow"),
   rule("doom_loop", "ask"),

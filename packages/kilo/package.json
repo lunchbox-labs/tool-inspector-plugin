@@ -29,8 +29,8 @@
     "test:package": "node --experimental-strip-types --test tests/package.integration.ts"
   },
   "devDependencies": {
-    "@kilocode/plugin": "7.8.27",
-    "@kilocode/sdk": "7.8.27",
+    "@kilocode/plugin": "7.8.32",
+    "@kilocode/sdk": "7.8.32",
     "@opentui/core": "0.5.11",
     "@opentui/keymap": "0.5.11",
     "@opentui/solid": "0.5.11",
